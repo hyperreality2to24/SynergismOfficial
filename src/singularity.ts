@@ -1,4 +1,6 @@
 import { DOMCacheGetOrSet } from './Cache/DOM'
+import type { IUpgradeData } from './UpgradeClass';
+import { DynamicUpgrade } from './UpgradeClass'
 import { format, player } from './Synergism'
 import type { Player } from './types/Synergism'
 import { Alert, Prompt } from './UpdateHTML'
@@ -6,6 +8,8 @@ import { toOrdinal } from './Utility'
 
 export const updateSingularityPenalties = (): void => {
     const color = player.runelevels[6] > 0 ? 'green' : 'red';
+    const platonic = (player.singularityCount > 36) ? `Platonic Upgrade costs are multiplied by ${format(calculateSingularityDebuff('Platonic Costs'), 2, true)}.` : ''
+    const hepteract = (player.singularityCount > 50) ? `Hepteract Forge costs are multiplied by ${format(calculateSingularityDebuff('Hepteract Costs'), 2, true)}.` : ''
     const str = getSingularityOridnalText(player.singularityCount) +
                 `<br>Global Speed is divided by ${format(calculateSingularityDebuff('Global Speed'), 2, true)}.
                  Ascension Speed is divided by ${format(calculateSingularityDebuff('Ascension Speed'), 2, true)}
@@ -14,7 +18,9 @@ export const updateSingularityPenalties = (): void => {
                  Cube Gain is divided by ${format(calculateSingularityDebuff('Cubes'), 2, true)}.
                  Research Costs are multiplied by ${format(calculateSingularityDebuff('Researches'), 2, true)}.
                  Cube Upgrade Costs (Excluding Cookies) are multiplied by ${format(calculateSingularityDebuff('Cube Upgrades'), 2, true)}.
-                 <br><span style='color: ${color}'>Antiquities of Ant God is ${(player.runelevels[6] > 0) ? '' : 'NOT'} purchased. Penalties are ${(player.runelevels[6] > 0) ? '' : 'NOT'} dispelled!</span>`
+                 <br><span style='color: ${color}'>Antiquities of Ant God is ${(player.runelevels[6] > 0) ? '' : 'NOT'} purchased. Penalties are ${(player.runelevels[6] > 0) ? '' : 'NOT'} dispelled!</span>
+                 ${platonic}
+                 ${hepteract}`
 
     DOMCacheGetOrSet('singularityPenaltiesMultiline').innerHTML = str;
 }
@@ -23,50 +29,25 @@ function getSingularityOridnalText(singularityCount: number): string {
     return 'You are in the <span style="color: gold">' + toOrdinal(singularityCount) + ' singularity</span>';
 }
 
-export interface ISingularityData {
-    name: string
-    description: string
-    level?: number
-    maxLevel: number
-    costPerLevel: number
-    toggleBuy?: number
+export interface ISingularityData extends IUpgradeData {
     goldenQuarksInvested?: number
     minimumSingularity?: number
-    effect? (n: number): {bonus: number | boolean, desc: string}
-    freeLevels?: number
 }
 
 /**
  * Singularity Upgrades are bought in the Shop of the singularity tab, and all have their own
  * name, description, level and maxlevel, plus a feature to toggle buy on each.
  */
-export class SingularityUpgrade {
+export class SingularityUpgrade extends DynamicUpgrade {
 
     // Field Initialization
-    private readonly name: string;
-    private readonly description: string;
-    public level = 0;
-    public freeLevels = 0;
-    private readonly maxLevel: number; //-1 = infinitely levelable
-    private readonly costPerLevel: number;
-    public toggleBuy = 1; //-1 = buy MAX (or 1000 in case of infinity levels!)
     public goldenQuarksInvested = 0;
     public minimumSingularity: number;
-    private readonly effect: (n: number) => {bonus: number | boolean, desc: string}
 
     public constructor(data: ISingularityData) {
-        this.name = data.name;
-        this.description = data.description;
-        this.level = data.level ?? this.level;
-        this.maxLevel = data.maxLevel;
-        this.costPerLevel = data.costPerLevel;
-        this.toggleBuy = data.toggleBuy ?? 1;
+        super(data)
         this.goldenQuarksInvested = data.goldenQuarksInvested ?? 0;
         this.minimumSingularity = data.minimumSingularity ?? 0;
-        this.freeLevels = data.freeLevels ?? 0;
-        this.effect = data.effect ?? function (n:number) {
-            return {bonus: n, desc: 'WIP not implemented'}
-        }
     }
 
     /**
@@ -104,7 +85,7 @@ export class SingularityUpgrade {
      * Retrieves the cost for upgrading the singularity upgrade once. Return 0 if maxed.
      * @returns A number representing how many Golden Quarks a player must have to upgrade once.
      */
-    private getCostTNL(): number {
+    getCostTNL(): number {
         let costMultiplier = (this.maxLevel === -1 && this.level >= 100) ? this.level / 50 : 1;
         costMultiplier *= (this.maxLevel === -1 && this.level >= 400) ? this.level / 100 : 1;
         return (this.maxLevel === this.level) ? 0: Math.ceil(this.costPerLevel * (1 + this.level) * costMultiplier);
@@ -152,46 +133,10 @@ export class SingularityUpgrade {
         updateSingularityPerks();
     }
 
-    public async changeToggle(): Promise<void> {
-
-        // Is null unless given an explicit number
-        const newToggle = await Prompt(`
-        Set maximum purchase amount per click for the ${this.name} upgrade.
-
-        type -1 to set to MAX by default.
-        `);
-        const newToggleAmount = Number(newToggle);
-
-        if (newToggle === null) {
-            return Alert(`Toggle kept at ${format(this.toggleBuy)}.`)
-        }
-
-        if (!Number.isInteger(newToggle)) {
-            return Alert('Toggle value must be a whole number!');
-        }
-        if (newToggleAmount < -1) {
-            return Alert('The only valid negative number for toggle is -1.');
-        }
-        if (newToggleAmount === 0) {
-            return Alert('You cannot set the toggle to 0.');
-        }
-
-        this.toggleBuy = newToggleAmount;
-        const m = newToggleAmount === -1
-            ? 'Your toggle is now set to MAX'
-            : `Your toggle is now set to ${format(this.toggleBuy)}`;
-
-        return Alert(m);
-    }
-
     public refund(): void {
         player.goldenQuarks += this.goldenQuarksInvested;
         this.level = 0;
         this.goldenQuarksInvested = 0;
-    }
-
-    public getEffect(): {bonus: number | boolean, desc: string} {
-        return this.effect(this.level + this.freeLevels)
     }
 }
 
@@ -790,7 +735,7 @@ export const updateSingularityPerks = (): void => {
                 (Hover for more details. Perks in <span class="newPerk">gold text</span> were added or improved in this singularity)<br/>`
                 + getAvailablePerksDescription(singularityCount)
 
-    DOMCacheGetOrSet('singularityPerksMultiline').innerHTML = str;
+    DOMCacheGetOrSet('singularityMultiline').innerHTML = str;
 }
 
 export interface ISingularityPerkDisplayInfo {
@@ -927,7 +872,7 @@ export async function buyGoldenQuarks(): Promise<void> {
     }
 }
 
-export type SingularityDebuffs = 'Offering' | 'Obtainium' | 'Global Speed' | 'Researches' | 'Ascension Speed' | 'Cubes' | 'Cube Upgrades'
+export type SingularityDebuffs = 'Offering' | 'Obtainium' | 'Global Speed' | 'Researches' | 'Ascension Speed' | 'Cubes' | 'Cube Upgrades' | 'Platonic Costs' | 'Hepteract Costs'
 
 export const calculateSingularityDebuff = (debuff: SingularityDebuffs, singularityCount: number=player.singularityCount) => {
     if (singularityCount === 0) {
@@ -970,6 +915,10 @@ export const calculateSingularityDebuff = (debuff: SingularityDebuffs, singulari
         return 1 + Math.sqrt(effectiveSingularities) / 5
     } else if (debuff === 'Cubes') {
         return 1 + Math.sqrt(effectiveSingularities) / 4
+    } else if (debuff === 'Platonic Costs') {
+        return (player.singularityCount > 36) ? 1 + Math.pow(effectiveSingularities, 3/10) / 5 : 1
+    } else if (debuff === 'Hepteract Costs') {
+        return (player.singularityCount > 50) ? 1 + Math.pow(effectiveSingularities, 11/50) / 10 : 1
     } else {
         // Cube upgrades
         return Math.cbrt(effectiveSingularities + 1)
