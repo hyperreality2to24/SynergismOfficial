@@ -10,7 +10,7 @@ export const calculatePlatonicBlessings = () => {
         let mult = 1;
         let effectiveAmount = platonicArray[i]
         if (i === 5) {
-            effectiveAmount = Math.min(effectiveAmount, 1e20)
+            effectiveAmount = Math.min(effectiveAmount, 1e308)
         }
         if (i === 6 && effectiveAmount >= 1e20) {
             effectiveAmount = Math.pow(effectiveAmount, 0.5) * 1e10
