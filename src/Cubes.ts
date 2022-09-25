@@ -82,7 +82,9 @@ const cubeUpgradeName = [
     'Wow! A box of Metaphysical Brownies.',
     'Wow! A box of Not Cookies.',
     'Wow! A box of Cookies Beyond This World.',
-    'Wow! A box of Perfect Cookies.'
+    'Wow! A box of Perfect Cookies.',
+    'Wow! A Singular Cookie of Pandora\'s Benefactory',
+    'Wow! A Singular Cookie of Vyshareth\'s Benefactory'
 ]
 
 const cubeAutomationIndices = [4, 5, 6, 7, 8, 9, 10, // row 1
@@ -147,7 +149,7 @@ const cubeUpgradeDescriptions = [
     '[3x7] Upon an Ascension, you will start with 1 of each Reincarnation building to speed up Ascensions.',
     '[3x8] Well, I think you got it? Gain +1% of particles on Reincarnation per second.',
     '[3x9] Add +4 to Reincarnation Challenge cap per level. Completions after 25 scale faster in requirement!',
-    '[3x10] You now get +25% Cubes and Tesseracts forever!',
+    '[3x10] You now get +40% Cubes and Tesseracts forever!',
     '[4x1] You again? +5% more score on Ascensions per level.',
     '[4x2] Gain +0.1% Rune EXP per second you have spent in an Ascension. This has no cap!',
     '[4x3] For each 20 Cubes opened at once, you get yet another additional tribute at random.',
@@ -177,7 +179,7 @@ const cubeUpgradeDescriptions = [
     '[Cx7] Yum yum! Now we\'re talking... or maybe not. Increase the cap of Cube Upgrades 1x1, 2x1, 3x1, 4x1, 5x1 by 1.',
     '[Cx8] A bit festive! If there is an event, All Cube gain is multiplied by 1.25.',
     '[Cx9] Quite sour for a cookie. But it increases your Ascension speed by 0.25% per level, so who is to complain?',
-    '[Cx10] Wow! Bakery had extra ginger from their christmas sale. Reduce the cost of buying Golden Quarks by 1 Quark per level.',
+    '[Cx10] Wow! Bakery had extra ginger from their christmas sale. Reduce the cost of buying Golden Quarks by 0.003% per level.',
     '[Cx11] Edible but prone to mistakes. Adds 125 whole milliseconds to the tolerance of code \'time\', and increases reward by +2% per level.',
     '[Cx12] Platonic loves toffee. Octuple Obtainium and Offering gain in Challenge 15.',
     '[Cx13] Brownie Cookies, the best of both worlds. Increase Regular Cube Gain by 1% based on owned Hepteracts (+3% per OOM).',
@@ -192,7 +194,7 @@ const cubeUpgradeDescriptions = [
 
 const getCubeCost = (i: number, linGrowth = 0, cubic = false): IMultiBuy => {
     const maxLevel = getCubeMax(i)
-    let amountToBuy = G['buyMaxCubeUpgrades'] ? 1e5: 1;
+    let amountToBuy = player.cubeUpgradesBuyMaxToggle ? 1e5: 1;
     const cubeUpgrade = player.cubeUpgrades[i]!;
     amountToBuy = Math.min(maxLevel - cubeUpgrade, amountToBuy)
     const singularityMultiplier = (i <= 50) ? calculateSingularityDebuff('Cube Upgrades'): 1;
@@ -201,7 +203,7 @@ const getCubeCost = (i: number, linGrowth = 0, cubic = false): IMultiBuy => {
 
     if (cubic) {
         // TODO: Fix this inconsistency later.
-        amountToBuy = G['buyMaxCubeUpgrades'] ? maxLevel: Math.min(maxLevel, cubeUpgrade + 1)
+        amountToBuy = player.cubeUpgradesBuyMaxToggle ? maxLevel: Math.min(maxLevel, cubeUpgrade + 1)
         metaData = calculateCubicSumData(cubeUpgrade, cubeBaseCost[i-1],
             Number(player.wowCubes), amountToBuy)
     } else {
@@ -258,7 +260,7 @@ export const updateCubeUpgradeBG = (i: number) => {
         player.cubeUpgrades[i] = maxCubeLevel;
     }
     if (player.cubeUpgrades[i] === 0) {
-        a.style.backgroundColor = 'black'
+        a.style.backgroundColor = ''
     }
     if (cubeUpgrade > 0 && cubeUpgrade < maxCubeLevel) {
         a.style.backgroundColor = 'purple'
@@ -269,7 +271,7 @@ export const updateCubeUpgradeBG = (i: number) => {
 
 }
 
-function awardAutosCookieUpgrade() {
+export const awardAutosCookieUpgrade = () => {
     for (const i of cubeAutomationIndices) {
         const maxLevel = getCubeMax(i)
         player.cubeUpgrades[i] = maxLevel;
@@ -285,6 +287,14 @@ function awardAutosCookieUpgrade() {
 }
 
 export const buyCubeUpgrades = (i: number, linGrowth = 0, cubic = false) => {
+    // Actually lock for HTML exploit
+    if ((i > 50 && i <= 55 && !player.singularityUpgrades.cookies.getEffect().bonus) ||
+        (i > 55 && i <= 60 && !player.singularityUpgrades.cookies2.getEffect().bonus) ||
+        (i > 60 && i <= 65 && !player.singularityUpgrades.cookies3.getEffect().bonus) ||
+        (i > 65 && i <= 70 && !player.singularityUpgrades.cookies4.getEffect().bonus)) {
+        return;
+    }
+
     const metaData = getCubeCost(i,linGrowth, cubic);
     const maxLevel = getCubeMax(i)
     if (Number(player.wowCubes) >= metaData.cost && player.cubeUpgrades[i]! < maxLevel){
@@ -309,6 +319,12 @@ export const buyCubeUpgrades = (i: number, linGrowth = 0, cubic = false) => {
 
     if (i === 51 && player.cubeUpgrades[51] > 0) {
         awardAutosCookieUpgrade();
+    }
+
+    if (i === 57 && player.cubeUpgrades[57] > 0) {
+        for (let j = 1; j < player.cubeUpgrades.length; j++) {
+            updateCubeUpgradeBG(j);
+        }
     }
 
     cubeUpgradeDesc(i, linGrowth, cubic);

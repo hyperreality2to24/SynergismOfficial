@@ -28,9 +28,16 @@ export const maxCorruptionLevel = () => {
     if (player.platonicUpgrades[10] > 0) {
         max += 1
     }
+
+    // Overrides everything above.
+    if (player.singularityUpgrades.platonicTau.getEffect().bonus) {
+        max = Math.max(13, max)
+    }
+
     if (player.singularityUpgrades.corruptionFourteen.getEffect().bonus) {
         max += 1
     }
+    max += +player.octeractUpgrades.octeractCorruption.getEffect().bonus
 
     return max
 }
@@ -156,8 +163,15 @@ export const corruptionStatsUpdate = () => {
 
 export const corruptionButtonsAdd = () => {
     const rows = document.getElementsByClassName('corruptionStatRow');
+
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
+
+        // Delete rows that already exist
+        for (let i = row.children.length - 1; i >= 1; i--) {
+            row.children[i].remove();
+        }
+
         const p = document.createElement('p');
         p.className = 'corrDesc'
         let text = document.createTextNode('Current: ')
@@ -180,19 +194,19 @@ export const corruptionButtonsAdd = () => {
         btn = document.createElement('button');
         btn.className = 'corrBtn corruptionMax';
         btn.textContent = '+MAX';
-        btn.onclick = () => toggleCorruptionLevel(i + 2, 99);
+        btn.addEventListener('click', () => toggleCorruptionLevel(i + 2, 99));
         row.appendChild(btn);
 
         btn = document.createElement('button');
         btn.className = 'corrBtn corruptionUp';
         btn.textContent = '+1';
-        btn.onclick = () => toggleCorruptionLevel(i + 2, 1);
+        btn.addEventListener('click', () => toggleCorruptionLevel(i + 2, 1));
         row.appendChild(btn);
 
         btn = document.createElement('button');
         btn.className = 'corrBtn corruptionDown';
         btn.textContent = '-1';
-        btn.onclick = () => toggleCorruptionLevel(i + 2, -1);
+        btn.addEventListener('click', () => toggleCorruptionLevel(i + 2, -1));
         row.appendChild(btn);
 
         btn = document.createElement('button');
@@ -208,46 +222,66 @@ export const corruptionLoadoutTableCreate = () => {
     const corrCount = 8
     const table = getElementById<HTMLTableElement>('corruptionLoadoutTable')
 
+    // Delete rows that already exist
+    for (let i = table.rows.length - 1; i >= 1; i--) {
+        table.deleteRow(i);
+    }
+
     for (let i = 0; i < Object.keys(player.corruptionLoadouts).length + 1; i++) {
         const row = table.insertRow()
         for (let j = 0; j <= corrCount; j++) {
             const cell = row.insertCell();
             cell.className = `test${j}`
-            if (j === 0) {
-                if (i === 0) {
+            if (j === 0) { // First column
+                if (i === 0) { // First row
                     cell.textContent = 'Next:'
+                    cell.addEventListener('click', () => void corruptionLoadoutGetExport());
+                    cell.classList.add('corrLoadoutName');
+                    cell.title = 'Click to copy the next Corruptions to the clipboard. This is the format that can be imported'
+                } else {
+                    // Custom loadout names are loaded later, via updateCorruptionLoadoutNames()
+                    cell.title = `Click to rename. Hotkey: SHIFT+${i}`
                 }
-                // Other loadout names are updated after player load in Synergism.ts > loadSynergy
+
             } else if (j <= corrCount) {
-                // start two-indexed (WTF!)
-                cell.textContent = ((i === 0) ? player.prototypeCorruptions[j+1] : player.corruptionLoadouts[i][j+1]).toString();
-                cell.style.textAlign = 'center'
+                if (i === 0) { // Next Ascension Corruption values
+                    cell.textContent = player.prototypeCorruptions[j+1].toString()
+                } else { // Loadout Corruption values
+                    cell.textContent = player.corruptionLoadouts[i][j+1].toString()
+                }
             }
         }
         if (i === 0) {
+            // First line is special : "Import" and "Zero" buttons
             let cell = row.insertCell();
-            //empty
+            let btn: HTMLButtonElement= document.createElement('button');
+            btn.className = 'corrImport'
+            btn.textContent = 'Import'
+            btn.addEventListener('click', () => void importCorruptionsPrompt());
+            cell.appendChild(btn);
+            cell.title = 'Import Corruption Loadout in text format'
 
             cell = row.insertCell();
-            const btn = document.createElement('button');
+            btn = document.createElement('button');
             btn.className = 'corrLoad'
             btn.textContent = 'Zero'
-            btn.onclick = () => corruptionLoadoutSaveLoad(false, i);
+            btn.addEventListener('click', () => corruptionLoadoutSaveLoad(false, i));
             cell.appendChild(btn);
-            cell.title = 'Reset corruptions to zero on your next ascension'
+            cell.title = 'Reset Corruptions to zero on your next Ascension. Hotkey: SHIFT+9'
         } else {
             let cell = row.insertCell();
             let btn = document.createElement('button');
             btn.className = 'corrSave'
             btn.textContent = 'Save'
-            btn.onclick = () => corruptionLoadoutSaveLoad(true, i);
+            btn.addEventListener('click', () => corruptionLoadoutSaveLoad(true, i));
             cell.appendChild(btn);
+            cell.title = 'Save current Corruptions to this Loadout'
 
             cell = row.insertCell();
             btn = document.createElement('button');
             btn.className = 'corrLoad'
             btn.textContent = 'Load'
-            btn.onclick = () => corruptionLoadoutSaveLoad(false, i);
+            btn.addEventListener('click', () => corruptionLoadoutSaveLoad(false, i));
             cell.appendChild(btn);
         }
     }
@@ -281,8 +315,33 @@ export const corruptionLoadoutSaveLoad = (save = true, loadout = 1) => {
 export const applyCorruptions = (corruptions: string) => {
     if (corruptions && corruptions.indexOf('/') > -1 && corruptions.split('/').length === 13) {
         // Converts the '/' separated string into a number[]
-        player.prototypeCorruptions = corruptions.split('/').map(x => +x);
+        const newCorruptions = corruptions.split('/').map(corr => Number(corr));
+
+        for (const value of newCorruptions) {
+            if (
+                !Number.isInteger(value) ||
+                Number.isNaN(value) ||
+                value < 0 ||
+                value > maxCorruptionLevel()
+            ) {
+                return false;
+            }
+        }
+
+        player.prototypeCorruptions = newCorruptions;
+        corruptionLoadoutTableUpdate();
         corruptionStatsUpdate();
+        return true;
+    }
+
+    return false;
+}
+
+async function importCorruptionsPrompt() {
+    const input = await Prompt('Enter a Corruption Loadout to import for next Ascension. It must be in the following text format: 1/2/3/4/5/6/7/8');
+
+    if (!applyCorruptions('0/0/' + input + '/0/0/0')) {
+        void Alert('Your input was not in the correct format, try again.');
     }
 }
 
@@ -323,6 +382,16 @@ export const updateCorruptionLoadoutNames = () => {
     }
 }
 
+const corruptionLoadoutGetExport = async () => {
+    const str = player.prototypeCorruptions.slice(2, 10).join('/');
+    if ('clipboard' in navigator) {
+        await navigator.clipboard.writeText(str)
+            .catch((e: Error) => Alert(`Unable to write the save to clipboard: ${e.message}`));
+    } else {
+        void Alert(`Unable to write the save to clipboard: ${str}`);
+    }
+}
+
 export const corruptionCleanseConfirm = () => {
     const corrupt = DOMCacheGetOrSet('corruptionCleanseConfirm');
     corrupt.style.visibility = 'visible';
@@ -340,22 +409,22 @@ export const revealCorruptions = () => {
     const c13Unlocks = document.getElementsByClassName('chal13Corruption') as HTMLCollectionOf<HTMLElement>;
     const c14Unlocks = document.getElementsByClassName('chal14Corruption') as HTMLCollectionOf<HTMLElement>;
 
-    if (player.challengecompletions[11] > 0) {
+    if (player.challengecompletions[11] > 0 || player.singularityUpgrades.platonicTau.getEffect().bonus) {
         for (let i = 0; i < c11Unlocks.length; i++) {
             c11Unlocks[i].style.display = 'flex'
         }
     }
-    if (player.challengecompletions[12] > 0) {
+    if (player.challengecompletions[12] > 0 || player.singularityUpgrades.platonicTau.getEffect().bonus) {
         for (let i = 0; i < c12Unlocks.length; i++) {
             c12Unlocks[i].style.display = 'flex'
         }
     }
-    if (player.challengecompletions[13] > 0) {
+    if (player.challengecompletions[13] > 0 || player.singularityUpgrades.platonicTau.getEffect().bonus) {
         for (let i = 0; i < c13Unlocks.length; i++) {
             c13Unlocks[i].style.display = 'flex'
         }
     }
-    if (player.challengecompletions[14] > 0) {
+    if (player.challengecompletions[14] > 0 || player.singularityUpgrades.platonicTau.getEffect().bonus) {
         for (let i = 0; i < c14Unlocks.length; i++) {
             c14Unlocks[i].style.display = 'flex'
         }

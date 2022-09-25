@@ -1,12 +1,11 @@
-import { player, format, clearInt, interval } from './Synergism';
-import { calculateSigmoidExponential, calculateSigmoid, calculateAnts, calculateRuneLevels, calculateMaxRunes, calculateAntSacrificeELO, calculateAntSacrificeRewards } from './Calculate';
+import { player, format } from './Synergism';
+import { calculateSigmoidExponential, calculateSigmoid, calculateAnts, calculateRuneLevels, calculateAntSacrificeELO, calculateAntSacrificeRewards } from './Calculate';
 import { Globals as G } from './Variables';
 
 import type { DecimalSource } from 'break_infinity.js';
 import Decimal from 'break_infinity.js';
 import { achievementaward } from './Achievements';
 import { Confirm, revealStuff } from './UpdateHTML';
-import { redeemShards } from './Runes';
 import { updateTalismanInventory } from './Talismans';
 import { buyResearch } from './Research';
 import { resetAnts } from './Reset';
@@ -15,6 +14,7 @@ import { Synergism } from './Events';
 import type { FirstToEighth, ZeroToSeven } from './types/Synergism';
 import { DOMCacheGetOrSet } from './Cache/DOM';
 import { smallestInc } from './Utility';
+import { setInterval, clearInterval } from './Timers'
 
 const antdesc: Record<string, string> = {
     antdesc1: 'Gain a Worker Ant for your everyday life. Gathers Galactic Crumbs. Essential!',
@@ -83,8 +83,8 @@ const antUpgradeTexts = [
 let repeatAnt: ReturnType<typeof setTimeout>;
 
 export const antRepeat = (i: number) => {
-    clearInt(repeatAnt);
-    repeatAnt = interval(() => updateAntDescription(i), 50);
+    clearInterval(repeatAnt);
+    repeatAnt = setInterval(() => updateAntDescription(i), 50);
 }
 
 export const updateAntDescription = (i: number) => {
@@ -340,7 +340,7 @@ export const sacrificeAnts = async (auto = false) => {
     let p = true
 
     if (player.antPoints.gte('1e40')) {
-        if (!auto && player.antSacrificePoints < 100 && player.toggles[32]) {
+        if (!auto && player.toggles[32]) {
             p = await Confirm('This resets your Crumbs, Ants and Ant Upgrades in exchange for some multiplier and resources. Continue?')
         }
         if (p) {
@@ -376,27 +376,6 @@ export const sacrificeAnts = async (auto = false) => {
                 player.epicFragments += sacRewards.epicFragments;
                 player.legendaryFragments += sacRewards.legendaryFragments;
                 player.mythicalFragments += sacRewards.mythicalFragments;
-            }
-
-            // Refer to analogous code in Syngergism.js, function tick().
-            if (player.shopUpgrades.offeringAuto > 0.5 && player.autoSacrificeToggle) {
-                // Since ants boost rune EXP, we need to auto-spend offerings NOW, before reset, if cube-tier auto-spend is enabled.
-                if (player.cubeUpgrades[20] === 1 && player.runeshards >= 5) {
-                    let unmaxed = 0;
-                    for (let i = 1; i <= 5; i++) {
-                        if (player.runelevels[i - 1] < calculateMaxRunes(i)) {
-                            unmaxed++;
-                        }
-                    }
-                    if (unmaxed > 0) {
-                        const baseAmount = Math.floor(player.runeshards / unmaxed);
-                        for (let i = 1; i <= 5; i++) {
-                            redeemShards(i, true, baseAmount);
-                        }
-                        player.sacrificeTimer = 0;
-                    }
-                }
-                // Other cases don't perform a spend-all and are thus safely handled by the standard tick() function.
             }
 
             // Now we're safe to reset the ants.

@@ -1,10 +1,8 @@
-import { toggleAscStatPerSecond, toggleTabs, toggleSubTab, toggleBuyAmount, toggleAutoTesseracts, toggleSettings, toggleautoreset, toggleautobuytesseract, toggleShops, toggleAutoSacrifice, toggleautoenhance, toggleautofortify, updateRuneBlessingBuyAmount, toggleChallenges, toggleAutoChallengesIgnore, toggleAutoChallengeRun, updateAutoChallenge, toggleResearchBuy, toggleAutoResearch, toggleAntMaxBuy, toggleAntAutoSacrifice, toggleMaxBuyCube, toggleCorruptionLevel, toggleAutoAscend, toggleShopConfirmation, toggleAutoResearchMode, toggleBuyMaxShop, toggleHepteractAutoPercentage } from './Toggles'
-import { resetrepeat, updateAutoReset, updateTesseractAutoBuyAmount } from './Reset'
+import { toggleAscStatPerSecond, toggleTabs, toggleSubTab, toggleBuyAmount, toggleAutoTesseracts, toggleSettings, toggleautoreset, toggleautobuytesseract, toggleShops, toggleAutoSacrifice, toggleAutoBuyFragment, toggleautoenhance, toggleautofortify, updateRuneBlessingBuyAmount, toggleSaveOff, toggleChallenges, toggleAutoChallengesIgnore, toggleAutoChallengeRun, updateAutoChallenge, toggleResearchBuy, toggleAutoResearch, toggleAntMaxBuy, toggleAntAutoSacrifice, toggleMaxBuyCube, toggleautoopensCubes, toggleCorruptionLevel, toggleAutoAscend, toggleShopConfirmation, toggleAutoResearchMode, toggleBuyMaxShop, toggleHideShop, toggleHepteractAutoPercentage } from './Toggles'
+import { resetrepeat, updateAutoReset, updateTesseractAutoBuyAmount, updateAutoCubesOpens } from './Reset'
 import { player, resetCheck, saveSynergy } from './Synergism'
-import { boostAccelerator, buyAccelerator, buyMultiplier, buyProducer, buyCrystalUpgrades, buyParticleBuilding, buyTesseractBuilding, buyUpgrades, buyRuneBonusLevels, buyAllBlessings } from './Buy'
-import { crystalupgradedescriptions, constantUpgradeDescriptions, buyConstantUpgrades, upgradedescriptions } from './Upgrades'
-import { buyAutobuyers } from './Automation'
-import { buyGenerator } from './Generators'
+import { boostAccelerator, buyAccelerator, buyMultiplier, buyProducer, buyCrystalUpgrades, buyParticleBuilding, buyTesseractBuilding, buyRuneBonusLevels, buyAllBlessings } from './Buy'
+import { crystalupgradedescriptions, constantUpgradeDescriptions, buyConstantUpgrades, upgradedescriptions, clickUpgrades, categoryUpgrades } from './Upgrades'
 import { achievementdescriptions, achievementpointvalues } from './Achievements'
 import { displayRuneInformation, redeemShards } from './Runes'
 import { toggleTalismanBuy, buyTalismanResources, buyAllTalismanResources, showTalismanPrices, buyTalismanLevels, buyTalismanEnhance, showRespecInformation, respecTalismanConfirm, respecTalismanCancel, changeTalismanModifier, updateTalismanCostDisplay, showTalismanEffect, showEnhanceTalismanPrices } from './Talismans'
@@ -14,12 +12,12 @@ import { antRepeat, sacrificeAnts, buyAntProducers, updateAntDescription, antUpg
 import { buyCubeUpgrades, cubeUpgradeDesc } from './Cubes'
 import { buyPlatonicUpgrades, createPlatonicDescription } from './Platonic'
 import { corruptionCleanseConfirm, corruptionDisplay } from './Corruptions'
-import { exportSynergism, updateSaveString, promocodes, promocodesPrompt, promocodesInfo, importSynergism, resetGame } from './ImportExport'
+import { exportSynergism, updateSaveString, promocodes, promocodesPrompt, promocodesInfo, importSynergism, resetGame, reloadDeleteGame, handleLastModified } from './ImportExport'
 import { resetHistoryTogglePerSecond } from './History'
-import { resetShopUpgrades, shopDescriptions, buyShopUpgrades, useConsumable, shopData, shopUpgradeTypes } from './Shop'
-import { Globals as G, Upgrade } from './Variables';
-import { changeTabColor } from './UpdateHTML'
-import { hepteractDescriptions, hepteractToOverfluxOrbDescription, tradeHepteractToOverfluxOrb, overfluxPowderDescription, overfluxPowderWarp } from './Hepteracts'
+import { resetShopUpgrades, shopDescriptions, buyShopUpgrades, buyConsumable, useConsumable, shopData, shopUpgradeTypes } from './Shop'
+import { Globals as G } from './Variables';
+import { changeTabColor, Confirm } from './UpdateHTML'
+import { hepteractDescriptions, hepteractToOverfluxOrbDescription, tradeHepteractToOverfluxOrb, overfluxPowderDescription, overfluxPowderWarp, toggleAutoBuyOrbs } from './Hepteracts'
 import { exitOffline, forcedDailyReset, timeWarp } from './Calculate'
 import type { OneToFive, Player } from './types/Synergism'
 import { displayStats } from './Statistics'
@@ -27,6 +25,8 @@ import { testing } from './Config';
 import { DOMCacheGetOrSet } from './Cache/DOM'
 import { toggleTheme } from './Themes'
 import { buyGoldenQuarks } from './singularity'
+import { resetHotkeys } from './Hotkeys'
+import { generateExportSummary } from './Summary'
 
 /* STYLE GUIDE */
 /*
@@ -66,6 +66,7 @@ export const generateEventHandlers = () => {
     }
     // Offline Button
     DOMCacheGetOrSet('exitOffline').addEventListener('click', () => exitOffline());
+    DOMCacheGetOrSet('offlineContainer').addEventListener('dblclick', () => exitOffline());
     // UPPER UI ELEMENTS
     //Prelude: Cube/Tesseract/Hypercube/Platonic display UIs (Onclicks)
     DOMCacheGetOrSet('ascCubeStats').addEventListener('click', () => toggleAscStatPerSecond(1))
@@ -73,6 +74,7 @@ export const generateEventHandlers = () => {
     DOMCacheGetOrSet('ascHyperStats').addEventListener('click', () => toggleAscStatPerSecond(3))
     DOMCacheGetOrSet('ascPlatonicStats').addEventListener('click', () => toggleAscStatPerSecond(4))
     DOMCacheGetOrSet('ascHepteractStats').addEventListener('click', () => toggleAscStatPerSecond(5))
+    DOMCacheGetOrSet('ascTimeTakenStats').addEventListener('click', () => toggleAscStatPerSecond(6))
     //Part 1: Reset Tiers
     //Onmouseover Events
     DOMCacheGetOrSet('prestigebtn').addEventListener('mouseover', () => resetrepeat('prestige'))
@@ -85,7 +87,7 @@ export const generateEventHandlers = () => {
     DOMCacheGetOrSet('ascendbtn').addEventListener('mouseover', () => resetrepeat('ascension'))
     DOMCacheGetOrSet('singularitybtn').addEventListener('mouseover', () => resetrepeat('singularity'))
 
-    for (const resetButton of Array.from(document.querySelectorAll('.resetbtn'))) {
+    for (const resetButton of Array.from(document.getElementsByClassName('resetbtn'))) {
         resetButton.addEventListener('mouseover', () => {
             resetButton.classList.add('hover');
         });
@@ -194,10 +196,9 @@ export const generateEventHandlers = () => {
     }
 
     //Part 4: Toggles
-    // I'm just addressing all global toggles here: toggle1 up to toggle35
-    for (let index = 0; index < 35; index++) {
-        DOMCacheGetOrSet(`toggle${index+1}`).addEventListener('click', () => toggleSettings(index))
-    }
+    // I'm just addressing all global toggles here
+    const toggles = document.querySelectorAll<HTMLElement>('.auto[toggleid]');
+    toggles.forEach(b => b.addEventListener('click', () => toggleSettings(b)));
     // Toggles auto reset type (between TIME and AMOUNT for 3 first Tiers, and between PERCENTAGE and AMOUNT for Tesseracts)
     DOMCacheGetOrSet('prestigeautotoggle').addEventListener('click', () => toggleautoreset(1))
     DOMCacheGetOrSet('transcendautotoggle').addEventListener('click', () => toggleautoreset(2))
@@ -212,6 +213,16 @@ export const generateEventHandlers = () => {
     // Tesseract-specific of the above. I don't know why I didn't standardize names here.
     DOMCacheGetOrSet('tesseractautobuytoggle').addEventListener('click', () => toggleautobuytesseract())
     DOMCacheGetOrSet('tesseractAmount').addEventListener('blur', () => updateTesseractAutoBuyAmount())
+    // Auto Opening of Cubes
+    DOMCacheGetOrSet('cubeOpensInput').addEventListener('blur', () => updateAutoCubesOpens(1))
+    DOMCacheGetOrSet('tesseractsOpensInput').addEventListener('blur', () => updateAutoCubesOpens(2))
+    DOMCacheGetOrSet('hypercubesOpensInput').addEventListener('blur', () => updateAutoCubesOpens(3))
+    DOMCacheGetOrSet('platonicCubeOpensInput').addEventListener('blur', () => updateAutoCubesOpens(4))
+    DOMCacheGetOrSet('openCubes').addEventListener('click', () => toggleautoopensCubes(1))
+    DOMCacheGetOrSet('openTesseracts').addEventListener('click', () => toggleautoopensCubes(2))
+    DOMCacheGetOrSet('openHypercubes').addEventListener('click', () => toggleautoopensCubes(3))
+    DOMCacheGetOrSet('openPlatonicCube').addEventListener('click', () => toggleautoopensCubes(4))
+
 
     // UPGRADES TAB
     // For all upgrades in the Upgrades Tab (125) count, we have the same mouseover event. So we'll work on those first.
@@ -220,35 +231,13 @@ export const generateEventHandlers = () => {
         DOMCacheGetOrSet(`upg${index}`).addEventListener('mouseover', () => upgradedescriptions(index));
     }
 
-    // The first 80 upgrades (Coin-Particle upgrade) are annoying since there are four cases based on which resource is needed.
-    //Note: this part can almost certainly be improved, this was just the quickest implementation
-    //End of shit portion (This is used in the following for loop though)
-    for (let index = 1; index <= 20; index++) {
-        //Onclick events (Regular upgrades 1-80)
-        // Regular Upgrades 1-20
-        DOMCacheGetOrSet(`upg${index}`).addEventListener('click', () => buyUpgrades(Upgrade.coin,index));
-        // Regular Upgrades 21-40
-        DOMCacheGetOrSet(`upg${20+index}`).addEventListener('click', () => buyUpgrades(Upgrade.prestige,index+20));
-        // Regular Upgrades 41-60
-        DOMCacheGetOrSet(`upg${40+index}`).addEventListener('click', () => buyUpgrades(Upgrade.transcend,index+40));
-        // Regular Upgrades 61-80
-        DOMCacheGetOrSet(`upg${60+index}`).addEventListener('click', () => buyUpgrades(Upgrade.reincarnation,index+60));
+    // Generates all upgrade button events
+    for (let index = 1; index <= 125; index++) {
+        DOMCacheGetOrSet(`upg${index}`).addEventListener('click', () => clickUpgrades(index, false));
     }
 
-    // Autobuyer (20 count, ID 81-100) and Generator (20 count, ID 101-120) Upgrades have a unique onclick
-    for (let index = 1; index <= 20; index++) {
-        //Onclick events (Autobuyer upgrades)
-        DOMCacheGetOrSet(`upg${index + 80}`).addEventListener('click', () => buyAutobuyers(index));
-    }
-    for (let index = 1; index <= 20; index++) {
-        //Onclick events (Generator Upgrades)
-        DOMCacheGetOrSet(`upg${index + 100}`).addEventListener('click', () => buyGenerator(index));
-    }
-
-    // Upgrades 121-125 are upgrades similar to the first 80.
-    for (let index = 1; index <= 5; index++) {
-        //Onclick events (Upgrade 121-125)
-        DOMCacheGetOrSet(`upg${index + 120}`).addEventListener('click', () => buyUpgrades(Upgrade.coin,index));
+    for (let index = 1; index <= 6; index++) {
+        DOMCacheGetOrSet(`upgrades${index}`).addEventListener('click', () => categoryUpgrades(index, false));
     }
 
     // Next part: Shop-specific toggles
@@ -299,6 +288,7 @@ export const generateEventHandlers = () => {
 
     }
 
+    DOMCacheGetOrSet('toggleautoBuyFragments').addEventListener('click', () => toggleAutoBuyFragment())
     DOMCacheGetOrSet('toggleautoenhance').addEventListener('click', () => toggleautoenhance())
     DOMCacheGetOrSet('toggleautofortify').addEventListener('click', () => toggleautofortify())
 
@@ -456,29 +446,30 @@ export const generateEventHandlers = () => {
     //Part 2: Cube Opening Buttons
     //Wow Cubes
     DOMCacheGetOrSet('open1Cube').addEventListener('click', () => player.wowCubes.open(1, false))
-    DOMCacheGetOrSet('open20Cube').addEventListener('click', () => player.wowCubes.open(Number(player.wowCubes) / 10, false))
-    DOMCacheGetOrSet('open1000Cube').addEventListener('click', () => player.wowCubes.open(Number(player.wowCubes) / 2, false))
+    DOMCacheGetOrSet('open20Cube').addEventListener('click', () => player.wowCubes.open(Math.floor(Number(player.wowCubes) / 10), false))
+    DOMCacheGetOrSet('open1000Cube').addEventListener('click', () => player.wowCubes.open(Math.floor(Number(player.wowCubes) / 2), false))
     DOMCacheGetOrSet('openCustomCube').addEventListener('click', () => player.wowCubes.openCustom());
     DOMCacheGetOrSet('openMostCube').addEventListener('click', () => player.wowCubes.open(1, true))
     //Wow Tesseracts
     DOMCacheGetOrSet('open1Tesseract').addEventListener('click', () => player.wowTesseracts.open(1, false))
-    DOMCacheGetOrSet('open20Tesseract').addEventListener('click', () => player.wowTesseracts.open(Number(player.wowTesseracts) / 10, false))
-    DOMCacheGetOrSet('open1000Tesseract').addEventListener('click', () => player.wowTesseracts.open(Number(player.wowTesseracts) / 2, false))
+    DOMCacheGetOrSet('open20Tesseract').addEventListener('click', () => player.wowTesseracts.open(Math.floor(Number(player.wowTesseracts) / 10), false))
+    DOMCacheGetOrSet('open1000Tesseract').addEventListener('click', () => player.wowTesseracts.open(Math.floor(Number(player.wowTesseracts) / 2), false))
     DOMCacheGetOrSet('openCustomTesseract').addEventListener('click', () => player.wowTesseracts.openCustom());
     DOMCacheGetOrSet('openMostTesseract').addEventListener('click', () => player.wowTesseracts.open(1, true))
     //Wow Hypercubes
     DOMCacheGetOrSet('open1Hypercube').addEventListener('click', () => player.wowHypercubes.open(1, false))
-    DOMCacheGetOrSet('open20Hypercube').addEventListener('click', () => player.wowHypercubes.open(Number(player.wowHypercubes) / 10, false))
-    DOMCacheGetOrSet('open1000Hypercube').addEventListener('click', () => player.wowHypercubes.open(Number(player.wowHypercubes) / 2, false))
+    DOMCacheGetOrSet('open20Hypercube').addEventListener('click', () => player.wowHypercubes.open(Math.floor(Number(player.wowHypercubes) / 10), false))
+    DOMCacheGetOrSet('open1000Hypercube').addEventListener('click', () => player.wowHypercubes.open(Math.floor(Number(player.wowHypercubes) / 2), false))
     DOMCacheGetOrSet('openCustomHypercube').addEventListener('click', () => player.wowHypercubes.openCustom());
     DOMCacheGetOrSet('openMostHypercube').addEventListener('click', () => player.wowHypercubes.open(1, true))
     //Wow Platonic Cubes
     DOMCacheGetOrSet('open1PlatonicCube').addEventListener('click', () => player.wowPlatonicCubes.open(1, false))
-    DOMCacheGetOrSet('open40kPlatonicCube').addEventListener('click', () => player.wowPlatonicCubes.open(Number(player.wowPlatonicCubes) / 10, false))
-    DOMCacheGetOrSet('open1mPlatonicCube').addEventListener('click', () => player.wowPlatonicCubes.open(Number(player.wowPlatonicCubes) / 2, false))
+    DOMCacheGetOrSet('open40kPlatonicCube').addEventListener('click', () => player.wowPlatonicCubes.open(Math.floor(Number(player.wowPlatonicCubes) / 10), false))
+    DOMCacheGetOrSet('open1mPlatonicCube').addEventListener('click', () => player.wowPlatonicCubes.open(Math.floor(Number(player.wowPlatonicCubes) / 2), false))
     DOMCacheGetOrSet('openCustomPlatonicCube').addEventListener('click', () => player.wowPlatonicCubes.openCustom());
     DOMCacheGetOrSet('openMostPlatonicCube').addEventListener('click', () => player.wowPlatonicCubes.open(1, true))
 
+    DOMCacheGetOrSet('saveOffToggle').addEventListener('click', () => toggleSaveOff())
     //Part 3: Platonic Upgrade Section
     const platonicUpgrades = document.getElementsByClassName('platonicUpgradeImage')
     for (let index = 0; index < platonicUpgrades.length; index++) {
@@ -537,6 +528,8 @@ export const generateEventHandlers = () => {
 
     DOMCacheGetOrSet('hepteractToQuark').addEventListener('mouseover', () => hepteractToOverfluxOrbDescription())
     DOMCacheGetOrSet('hepteractToQuarkTrade').addEventListener('click', () => tradeHepteractToOverfluxOrb())
+    DOMCacheGetOrSet('hepteractToQuarkTradeMax').addEventListener('click', () => tradeHepteractToOverfluxOrb(true))
+    DOMCacheGetOrSet('hepteractToQuarkTradeAuto').addEventListener('click', () => toggleAutoBuyOrbs())
     DOMCacheGetOrSet('overfluxPowder').addEventListener('mouseover', () => overfluxPowderDescription())
     DOMCacheGetOrSet('powderDayWarp').addEventListener('click', () => overfluxPowderWarp())
 
@@ -553,35 +546,42 @@ export const generateEventHandlers = () => {
     DOMCacheGetOrSet('corruptionCleanseConfirm').addEventListener('click', () => toggleCorruptionLevel(10, 999))
 
     //Extra toggle
-    DOMCacheGetOrSet('ascensionAutoEnable').addEventListener('click', () => toggleAutoAscend())
+    DOMCacheGetOrSet('ascensionAutoEnable').addEventListener('click', () => toggleAutoAscend(0))
+    DOMCacheGetOrSet('ascensionAutoToggle').addEventListener('click', () => toggleAutoAscend(1))
 
     // SETTNGS TAB
     // Part 0: Subtabs
-    const settingSubTabs = Array.from<HTMLElement>(document.querySelectorAll('button[id^="switchSettingSubTab"]'));
+    const settingSubTabs = Array.from<HTMLElement>(document.querySelectorAll('[id^="switchSettingSubTab"]'));
     for (const subtab of settingSubTabs) {
         subtab.addEventListener('click', () => toggleSubTab(-1, settingSubTabs.indexOf(subtab)));
     }
 
-    const t = Array.from(document.querySelectorAll<HTMLElement>('#statsForNerds > button'));
+    const t = Array.from(document.querySelectorAll<HTMLElement>('button.statsNerds'));
     for (const s of t) {
         s.addEventListener('click', (e) => displayStats(e.target as HTMLElement));
     }
+
+    DOMCacheGetOrSet('summaryGeneration').addEventListener('click', () => generateExportSummary());
 
     // Various functions
     /*Export Files*/ DOMCacheGetOrSet('exportgame').addEventListener('click', () => exportSynergism())
     /*Update name of File*/
     DOMCacheGetOrSet('saveStringInput').addEventListener('blur', e => updateSaveString(e.target as HTMLInputElement));
-    /*Save Game Button*/ DOMCacheGetOrSet('savegame').addEventListener('click', () => saveSynergy(true))
+    /*Save Game Button*/ DOMCacheGetOrSet('savegame').addEventListener('click', ({ target }) => saveSynergy(true, target as HTMLButtonElement))
     /*Delete Save Button*/ DOMCacheGetOrSet('deleteGame').addEventListener('click', () => resetGame())
+    /*Delete Save Button*/ DOMCacheGetOrSet('preloadDeleteGame').addEventListener('click', () => reloadDeleteGame())
     /*Submit Stats [Note: will eventually become obsolete if kong closes]*/ // DOMCacheGetOrSet('submitstats').addEventListener('click', () => submitStats())
     /*Promotion Codes*/ DOMCacheGetOrSet('promocodes').addEventListener('click', () => promocodesPrompt())
     /*Special action add*/ DOMCacheGetOrSet('addCode').addEventListener('click', () => promocodes('add'))
     DOMCacheGetOrSet('addCode').addEventListener('mouseover', () => promocodesInfo('add'))
+    /*Special action add one*/ DOMCacheGetOrSet('addCodeOne').addEventListener('click', () => promocodes('add', 1))
+    DOMCacheGetOrSet('addCodeOne').addEventListener('mouseover', () => promocodesInfo('add'))
     /*Special action daily*/ DOMCacheGetOrSet('dailyCode').addEventListener('click', () => promocodes('daily'))
     DOMCacheGetOrSet('dailyCode').addEventListener('mouseover', () => promocodesInfo('daily'))
     /*Special action time*/ DOMCacheGetOrSet('timeCode').addEventListener('click', () => promocodes('time'))
     DOMCacheGetOrSet('timeCode').addEventListener('mouseover', () => promocodesInfo('time'))
     /*Toggle Ascension Per-Second Setting*/ DOMCacheGetOrSet('historyTogglePerSecondButton').addEventListener('click', () => resetHistoryTogglePerSecond())
+    /*ResetHotkeys Button*/ DOMCacheGetOrSet('resetHotkeys').addEventListener('click', () => resetHotkeys())
 
     // SHOP TAB
 
@@ -595,6 +595,7 @@ TODO: Fix this entire tab it's utter shit
     /*Respec The Upgrades*/ DOMCacheGetOrSet('resetShopUpgrades').addEventListener('click', () => resetShopUpgrades())
     /*Toggle Shop Confirmations*/ DOMCacheGetOrSet('toggleConfirmShop').addEventListener('click', () => toggleShopConfirmation())
     /*Toggle Shop Buy Max*/ DOMCacheGetOrSet('toggleBuyMaxShop').addEventListener('click', () => toggleBuyMaxShop())
+    /*Toggle Hide Permanent Maxed*/ DOMCacheGetOrSet('toggleHideShop').addEventListener('click', () => toggleHideShop())
 
     // Part 2: Potions
     /*Offering Potion*/
@@ -602,7 +603,7 @@ TODO: Fix this entire tab it's utter shit
     DOMCacheGetOrSet('offeringpotionowned').addEventListener('mouseover', () => shopDescriptions('offeringPotion'))
     DOMCacheGetOrSet('buyofferingpotion').addEventListener('mouseover', () => shopDescriptions('offeringPotion'))
     DOMCacheGetOrSet('useofferingpotion').addEventListener('mouseover', () => shopDescriptions('offeringPotion'))
-    DOMCacheGetOrSet('buyofferingpotion').addEventListener('click', () => buyShopUpgrades('offeringPotion'))
+    DOMCacheGetOrSet('buyofferingpotion').addEventListener('click', () => buyConsumable('offeringPotion'))
     //DOMCacheGetOrSet('offeringPotions').addEventListener('click', () => buyShopUpgrades("offeringPotion"))  //Allow clicking of image to buy also
     DOMCacheGetOrSet('useofferingpotion').addEventListener('click', () => useConsumable('offeringPotion'))
     /*Obtainium Potion*/
@@ -610,7 +611,7 @@ TODO: Fix this entire tab it's utter shit
     DOMCacheGetOrSet('obtainiumpotionowned').addEventListener('mouseover', () => shopDescriptions('obtainiumPotion'))
     DOMCacheGetOrSet('buyobtainiumpotion').addEventListener('mouseover', () => shopDescriptions('obtainiumPotion'))
     DOMCacheGetOrSet('useobtainiumpotion').addEventListener('mouseover', () => shopDescriptions('obtainiumPotion'))
-    DOMCacheGetOrSet('buyobtainiumpotion').addEventListener('click', () => buyShopUpgrades('obtainiumPotion'))
+    DOMCacheGetOrSet('buyobtainiumpotion').addEventListener('click', () => buyConsumable('obtainiumPotion'))
     //DOMCacheGetOrSet('obtainiumPotions').addEventListener('click', () => buyShopUpgrades("obtainiumPotion"))  //Allow clicking of image to buy also
     DOMCacheGetOrSet('useobtainiumpotion').addEventListener('click', () => useConsumable('obtainiumPotion'))
     /* Permanent Upgrade Images */
@@ -630,14 +631,21 @@ TODO: Fix this entire tab it's utter shit
     const singularityUpgrades = Object.keys(player.singularityUpgrades) as (keyof Player['singularityUpgrades'])[];
     for (const key of singularityUpgrades) {
         DOMCacheGetOrSet(`${String(key)}`).addEventListener('mouseover', () => player.singularityUpgrades[`${String(key)}`].updateUpgradeHTML())
-        DOMCacheGetOrSet(`${String(key)}`).addEventListener('click', () => player.singularityUpgrades[`${String(key)}`].buyLevel())
+        DOMCacheGetOrSet(`${String(key)}`).addEventListener('click', (event) => player.singularityUpgrades[`${String(key)}`].buyLevel(event))
+    }
+
+    // Octeract Upgrades
+    const octeractUpgrades = Object.keys(player.octeractUpgrades) as (keyof Player['octeractUpgrades'])[];
+    for (const key of octeractUpgrades) {
+        DOMCacheGetOrSet(`${String(key)}`).addEventListener('mouseover', () => player.octeractUpgrades[`${String(key)}`].updateUpgradeHTML())
+        DOMCacheGetOrSet(`${String(key)}`).addEventListener('click', (event) => player.octeractUpgrades[`${String(key)}`].buyLevel(event))
     }
     //Toggle subtabs of Singularity tab
-    for (let index = 0; index < 3; index++) {
+    for (let index = 0; index < 4; index++) {
         DOMCacheGetOrSet(`toggleSingularitySubTab${index+1}`).addEventListener('click', () => toggleSubTab(10, index))
     }
 
-    const tabs = document.querySelectorAll<HTMLElement>('#tabrow > li');
+    const tabs = document.querySelectorAll<HTMLElement>('#tabrow > button');
     tabs.forEach(b => b.addEventListener('click', () => changeTabColor()));
 
     // Import button
@@ -660,9 +668,31 @@ TODO: Fix this entire tab it's utter shit
         }
 
         element.value = '';
+        handleLastModified(file.lastModified)
 
         return importSynergism(save);
     });
 
-    DOMCacheGetOrSet('theme').addEventListener('click', toggleTheme);
+    DOMCacheGetOrSet('theme').addEventListener('click', () => toggleTheme());
+
+    DOMCacheGetOrSet('saveType').addEventListener('click', async (event) => {
+        const element = event.target as HTMLInputElement
+
+        if (!element.checked) {
+            localStorage.removeItem('copyToClipboard')
+            event.stopPropagation()
+            return
+        }
+
+        event.preventDefault()
+
+        const confirmed = await Confirm('Are you sure you want to enable copy save to clipboard?')
+
+        if (confirmed) {
+            element.checked = !element.checked
+            localStorage.setItem('copyToClipboard', '')
+        } else {
+            localStorage.removeItem('copyToClipboard')
+        }
+    })
 }

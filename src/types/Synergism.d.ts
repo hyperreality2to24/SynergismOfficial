@@ -2,11 +2,13 @@ import type Decimal from 'break_infinity.js';
 import type { WowCubes, WowHypercubes, WowPlatonicCubes, WowTesseracts } from '../CubeExperimental';
 import { HepteractCraft } from '../Hepteracts';
 import { Category, ResetHistoryEntryUnion } from '../History';
+import { OcteractUpgrade } from '../Octeracts';
 import { IPlatBaseCost } from '../Platonic';
 import type { QuarkHandler } from '../Quark';
 import { SingularityUpgrade } from '../singularity';
 
 export interface Player {
+    firstPlayed: string
     worlds: QuarkHandler
     coins: Decimal,
     coinsThisPrestige: Decimal,
@@ -298,7 +300,6 @@ export interface Player {
     offeringbuyamount: number
     tesseractbuyamount: number
 
-
     shoptoggles: {
         coin: boolean,
         prestige: boolean,
@@ -342,6 +343,9 @@ export interface Player {
         calculator: number,
         calculator2: number,
         calculator3: number,
+        calculator4: number,
+        calculator5: number,
+        calculator6: number,
         constantEX: number,
         powderEX: number,
         chronometer2: number,
@@ -349,21 +353,35 @@ export interface Player {
         seasonPassY: number,
         seasonPassZ: number,
         challengeTome2: number,
+        instantChallenge2: number,
         cubeToQuarkAll: number,
         cashGrab2: number,
         seasonPassLost: number,
         chronometerZ: number,
         powderAuto: number,
         offeringEX2: number,
-        obtainiumEX2: number
+        obtainiumEX2: number,
+        challenge15Auto: number,
+        extraWarp: number,
+        improveQuarkHept: number,
+        improveQuarkHept2: number,
+        improveQuarkHept3: number,
+        improveQuarkHept4: number,
+        shopImprovedDaily: number,
+        shopImprovedDaily2: number,
+        shopImprovedDaily3: number,
+        shopImprovedDaily4: number
     },
     shopConfirmationToggle: boolean,
     shopBuyMaxToggle: boolean,
+    shopHideToggle: boolean,
 
     autoSacrificeToggle: boolean,
+    autoBuyFragment: boolean,
     autoFortifyToggle: boolean,
     autoEnhanceToggle: boolean,
     autoResearchToggle: boolean,
+    researchBuyMaxToggle: boolean,
     autoResearchMode: 'cheapest' | 'manual'
     autoResearch: number
     autoSacrifice: number
@@ -403,13 +421,27 @@ export interface Player {
 
     ascensionCount: number
     ascensionCounter: number
+    ascensionCounterReal: number
+    ascensionCounterRealReal: number
+    autoOpenCubes: boolean,
+    openCubes: number
+    autoOpenTesseracts: boolean,
+    openTesseracts: number
+    autoOpenHypercubes: boolean,
+    openHypercubes: number
+    autoOpenPlatonicsCubes: boolean,
+    openPlatonicsCubes: number
     cubeUpgrades: [null, ...number[]]
+    cubeUpgradesBuyMaxToggle: boolean
     platonicUpgrades: number[]
+    saveOfferingToggle: boolean,
     wowCubes: WowCubes
     wowTesseracts: WowTesseracts
     wowHypercubes: WowHypercubes
     wowPlatonicCubes: WowPlatonicCubes
     wowAbyssals: number
+    wowOcteracts: number
+    totalWowOcteracts: number
     cubeBlessings: {
         accelerator: number
         multiplier: number
@@ -525,17 +557,24 @@ export interface Player {
         multiplier: HepteractCraft
     }
     overfluxOrbs: number
+    overfluxOrbsAutoBuy: boolean
     overfluxPowder: number
     dailyPowderResetUses: number
 
     singularityCount: number
+    highestSingularityCount: number
     singularityCounter: number
     goldenQuarks: number
     quarksThisSingularity: number
+    totalQuarksEver: number
+    hotkeys: Record<number, string[]>
+    theme: string
 
     singularityUpgrades: Record<keyof typeof singularityData, SingularityUpgrade>
+    octeractUpgrades: Record<keyof typeof octeractData, OcteractUpgrade> 
     dailyCodeUsed: boolean
     hepteractAutoCraftPercentage: number
+    octeractTimer: number
 
 }
 
@@ -677,8 +716,6 @@ export interface GlobalVariables {
 
     maxexponent: number
 
-    maxbuyresearch: boolean,
-
     effectiveLevelMult: number
     optimalOfferingTimer: number
     optimalObtainiumTimer: number
@@ -799,7 +836,6 @@ export interface GlobalVariables {
     hypercubeBonusMultiplier: [null, ...number[]]
     platonicBonusMultiplier: number[]
 
-    buyMaxCubeUpgrades: boolean,
     autoOfferingCounter: number
 
     researchOrderByCost: number[],
@@ -883,8 +919,6 @@ export interface GlobalVariables {
     historyCountMax: number
 
     isEvent: boolean
-
-    autoHepteractCount: number
 }
 
 export interface SynergismEvents {

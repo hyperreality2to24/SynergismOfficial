@@ -2,12 +2,13 @@ import { player, format } from './Synergism';
 import { Synergism } from './Events';
 import { Alert, revealStuff } from './UpdateHTML';
 import { DOMCacheGetOrSet } from './Cache/DOM';
+import { calculateSingularityDebuff } from './singularity';
 
 const platonicUpgradeDesc = [
-    '+0.0075% Cubes per Corruption level per level!',
-    '+0.015% Tesseracts per Corruption level per level!',
-    '+0.045% Hypercubes per Corruption level per level!',
-    'Gain +2% Platonic Cubes per level! It is that simple.',
+    '+0.0090% Cubes per Corruption level per level!',
+    '+0.018% Tesseracts per Corruption level per level!',
+    '+0.054% Hypercubes per Corruption level per level!',
+    'Gain +2.4% Platonic Cubes per level! It is that simple.',
     'C10 Exponent: 1.035 --> 1.0375, Constant tax exponent +0.10, 2x faster Constant production, +10% Quarks, +10 Reincarnation Challenge Cap, +5 Ascension Challenge Cap, 2x Obtainium and Offerings, ^1.10 coin gain in C15, as well +1 Corruption Cap Level!',
     'Multiplies Viscosity exponent by (1 + level/30), capacity of ^1 on Multipliers and Accelerators.',
     'Raises speed below 1x to the power of ^(1 - level/30).',
@@ -47,7 +48,7 @@ export const platUpgradeBaseCosts: Record<number, IPlatBaseCost> = {
         hypercubes: 1e5,
         platonics: 1e4,
         abyssals: 0,
-        maxLevel: 100
+        maxLevel: 125
     },
     2: {
         obtainium: 3e70,
@@ -57,7 +58,7 @@ export const platUpgradeBaseCosts: Record<number, IPlatBaseCost> = {
         hypercubes: 1e5,
         platonics: 1e4,
         abyssals: 0,
-        maxLevel: 100
+        maxLevel: 125
     },
     3: {
         obtainium: 1e71,
@@ -67,7 +68,7 @@ export const platUpgradeBaseCosts: Record<number, IPlatBaseCost> = {
         hypercubes: 1e7,
         platonics: 1e4,
         abyssals: 0,
-        maxLevel: 100
+        maxLevel: 125
     },
     4: {
         obtainium: 4e71,
@@ -77,7 +78,7 @@ export const platUpgradeBaseCosts: Record<number, IPlatBaseCost> = {
         hypercubes: 1e6,
         platonics: 1e6,
         abyssals: 0,
-        maxLevel: 100
+        maxLevel: 125
     },
     5: {
         obtainium: 1e80,
@@ -263,6 +264,8 @@ const checkPlatonicUpgrade = (index: number): Record<keyof (IPlatBaseCost & { ca
     if (platUpgradeBaseCosts[index].priceMult) {
         priceMultiplier = Math.pow(platUpgradeBaseCosts[index].priceMult!, Math.pow(player.platonicUpgrades[index] / (platUpgradeBaseCosts[index].maxLevel - 1), 1.25))
     }
+    priceMultiplier *= calculateSingularityDebuff('Platonic Costs')
+
     for (let i = 0; i < resources.length - 1; i++) {
         if (Math.floor(platUpgradeBaseCosts[index][resources[i]] * priceMultiplier) <= player[resourceNames[i]]) {
             checksum++;
@@ -292,6 +295,7 @@ export const createPlatonicDescription = (index: number) => {
     if (platUpgradeBaseCosts[index].priceMult) {
         priceMultiplier = Math.pow(platUpgradeBaseCosts[index].priceMult!, Math.pow(player.platonicUpgrades[index] / (platUpgradeBaseCosts[index].maxLevel - 1), 1.25))
     }
+    priceMultiplier *= calculateSingularityDebuff('Platonic Costs')
 
     DOMCacheGetOrSet('platonicUpgradeDescription').textContent = platonicUpgradeDesc[index-1];
     DOMCacheGetOrSet('platonicUpgradeLevel').textContent = 'Level: ' + format(player.platonicUpgrades[index]) + '/' + format(platUpgradeBaseCosts[index].maxLevel) + maxLevelAppend
@@ -350,7 +354,7 @@ export const updatePlatonicUpgradeBG = (i: number) => {
 
     const maxLevel = platUpgradeBaseCosts[i].maxLevel
     if (player.platonicUpgrades[i] === 0) {
-        a.style.backgroundColor = 'black'
+        a.style.backgroundColor = ''
     } else if (player.platonicUpgrades[i] > 0 && player.platonicUpgrades[i] < maxLevel) {
         a.style.backgroundColor = 'purple'
     } else if (player.platonicUpgrades[i] === maxLevel) {
@@ -366,6 +370,7 @@ export const buyPlatonicUpgrades = (index: number) => {
         if (platUpgradeBaseCosts[index].priceMult) {
             priceMultiplier = Math.pow(platUpgradeBaseCosts[index].priceMult!, Math.pow(player.platonicUpgrades[index] / (platUpgradeBaseCosts[index].maxLevel - 1), 1.25))
         }
+        priceMultiplier *= calculateSingularityDebuff('Platonic Costs');
 
         if (resourceCheck.canBuy) {
             player.platonicUpgrades[index] += 1
@@ -379,7 +384,7 @@ export const buyPlatonicUpgrades = (index: number) => {
 
             Synergism.emit('boughtPlatonicUpgrade', platUpgradeBaseCosts[index]);
             if (index === 20 && player.singularityCount === 0) {
-                return Alert('While I strongly recommended you not to buy this, you did it anyway. For that, you have unlocked the rune of Grandiloquence, for you are a richass.')
+                void Alert('While I strongly recommended you not to buy this, you did it anyway. For that, you have unlocked the rune of Grandiloquence, for you are a richass.')
             }
         } else {
             break;

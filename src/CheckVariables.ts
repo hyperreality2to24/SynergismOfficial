@@ -13,7 +13,8 @@ import { Alert } from './UpdateHTML';
 import { getQuarkInvestment, shopData} from './Shop';
 import type { ISingularityData} from './singularity';
 import { singularityData, SingularityUpgrade } from './singularity';
-import { Globals as G } from './Variables';
+import type { IOcteractData} from './Octeracts';
+import { octeractData, OcteractUpgrade } from './Octeracts';
 
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
@@ -138,7 +139,7 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
         player.roombaResearchIndex = 0;
     }
     if (data.history === undefined) {
-        player.history = { ants: [], ascend: [], reset: [] };
+        player.history = { ants: [], ascend: [], reset: [], singularity: [] };
     }
     if (data.autoChallengeRunning === undefined) {
         player.autoChallengeRunning = false
@@ -162,9 +163,30 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
         player.runeBlessingBuyAmount = 0;
         player.runeSpiritBuyAmount = 0;
     }
+    if (data.autoBuyFragment === undefined) {
+        player.autoBuyFragment = false;
+        player.saveOfferingToggle = false;
+    }
 
     if (data.autoTesseracts === undefined) {
         player.autoTesseracts = [false, false, false, false, false, false]
+    }
+
+    if (data.autoOpenCubes === undefined) {
+        player.autoOpenCubes = false;
+        player.openCubes = 0;
+    }
+    if (data.autoOpenTesseracts === undefined) {
+        player.autoOpenTesseracts = false;
+        player.openTesseracts = 0;
+    }
+    if (data.autoOpenHypercubes === undefined) {
+        player.autoOpenHypercubes = false;
+        player.openHypercubes = 0;
+    }
+    if (data.autoOpenPlatonicsCubes === undefined) {
+        player.autoOpenPlatonicsCubes = false;
+        player.openPlatonicsCubes = 0;
     }
 
     if (player.prototypeCorruptions[0] === null || player.prototypeCorruptions[0] === undefined) {
@@ -247,6 +269,7 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
         cookies2: new SingularityUpgrade(singularityData['cookies2']),
         cookies3: new SingularityUpgrade(singularityData['cookies3']),
         cookies4: new SingularityUpgrade(singularityData['cookies4']),
+        cookies5: new SingularityUpgrade(singularityData['cookies5']),
         ascensions: new SingularityUpgrade(singularityData['ascensions']),
         corruptionFourteen: new SingularityUpgrade(singularityData['corruptionFourteen']),
         corruptionFifteen: new SingularityUpgrade(singularityData['corruptionFifteen']),
@@ -259,6 +282,7 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
         singCubes1: new SingularityUpgrade(singularityData['singCubes1']),
         singCubes2: new SingularityUpgrade(singularityData['singCubes2']),
         singCubes3: new SingularityUpgrade(singularityData['singCubes3']),
+        singCitadel: new SingularityUpgrade(singularityData['singCitadel']),
         octeractUnlock: new SingularityUpgrade(singularityData['octeractUnlock']),
         offeringAutomatic: new SingularityUpgrade(singularityData['offeringAutomatic']),
         intermediatePack: new SingularityUpgrade(singularityData['intermediatePack']),
@@ -268,12 +292,55 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
         divinePack: new SingularityUpgrade(singularityData['divinePack']),
         wowPass2: new SingularityUpgrade(singularityData['wowPass2']),
         potionBuff: new SingularityUpgrade(singularityData['potionBuff']),
+        potionBuff2: new SingularityUpgrade(singularityData['potionBuff2']),
+        potionBuff3: new SingularityUpgrade(singularityData['potionBuff3']),
         singChallengeExtension: new SingularityUpgrade(singularityData['singChallengeExtension']),
         singChallengeExtension2: new SingularityUpgrade(singularityData['singChallengeExtension2']),
         singChallengeExtension3: new SingularityUpgrade(singularityData['singChallengeExtension3']),
         singQuarkHepteract: new SingularityUpgrade(singularityData['singQuarkHepteract']),
         singQuarkHepteract2: new SingularityUpgrade(singularityData['singQuarkHepteract2']),
-        singQuarkHepteract3: new SingularityUpgrade(singularityData['singQuarkHepteract3'])
+        singQuarkHepteract3: new SingularityUpgrade(singularityData['singQuarkHepteract3']),
+        singOcteractGain: new SingularityUpgrade(singularityData['singOcteractGain']),
+        singOcteractGain2: new SingularityUpgrade(singularityData['singOcteractGain2']),
+        singOcteractGain3: new SingularityUpgrade(singularityData['singOcteractGain3']),
+        singOcteractGain4: new SingularityUpgrade(singularityData['singOcteractGain4']),
+        singOcteractGain5: new SingularityUpgrade(singularityData['singOcteractGain5']),
+        wowPass3: new SingularityUpgrade(singularityData['wowPass3']),
+        ultimatePen: new SingularityUpgrade(singularityData['ultimatePen']),
+        platonicTau: new SingularityUpgrade(singularityData['platonicTau']),
+        platonicAlpha: new SingularityUpgrade(singularityData['platonicAlpha']),
+        platonicDelta: new SingularityUpgrade(singularityData['platonicDelta']),
+        platonicPhi: new SingularityUpgrade(singularityData['platonicPhi']),
+        singFastForward: new SingularityUpgrade(singularityData['singFastForward']),
+        singFastForward2: new SingularityUpgrade(singularityData['singFastForward2']),
+        singAscensionSpeed: new SingularityUpgrade(singularityData['singAscensionSpeed']),
+        singAscensionSpeed2: new SingularityUpgrade(singularityData['singAscensionSpeed2'])
+    }
+
+    player.octeractUpgrades = {
+        octeractStarter: new OcteractUpgrade(octeractData['octeractStarter']),
+        octeractGain: new OcteractUpgrade(octeractData['octeractGain']),
+        octeractGain2: new OcteractUpgrade(octeractData['octeractGain2']),
+        octeractQuarkGain: new OcteractUpgrade(octeractData['octeractQuarkGain']),
+        octeractCorruption: new OcteractUpgrade(octeractData['octeractCorruption']),
+        octeractGQCostReduce: new OcteractUpgrade(octeractData['octeractGQCostReduce']),
+        octeractExportQuarks: new OcteractUpgrade(octeractData['octeractExportQuarks']),
+        octeractImprovedDaily: new OcteractUpgrade(octeractData['octeractImprovedDaily']),
+        octeractImprovedDaily2: new OcteractUpgrade(octeractData['octeractImprovedDaily2']),
+        octeractImprovedQuarkHept: new OcteractUpgrade(octeractData['octeractImprovedQuarkHept']),
+        octeractImprovedGlobalSpeed: new OcteractUpgrade(octeractData['octeractImprovedGlobalSpeed']),
+        octeractImprovedAscensionSpeed: new OcteractUpgrade(octeractData['octeractImprovedAscensionSpeed']),
+        octeractImprovedAscensionSpeed2: new OcteractUpgrade(octeractData['octeractImprovedAscensionSpeed2']),
+        octeractImprovedFree: new OcteractUpgrade(octeractData['octeractImprovedFree']),
+        octeractImprovedFree2: new OcteractUpgrade(octeractData['octeractImprovedFree2']),
+        octeractImprovedFree3: new OcteractUpgrade(octeractData['octeractImprovedFree3']),
+        octeractImprovedFree4: new OcteractUpgrade(octeractData['octeractImprovedFree4']),
+        octeractSingUpgradeCap: new OcteractUpgrade(octeractData['octeractSingUpgradeCap']),
+        octeractOfferings1: new OcteractUpgrade(octeractData['octeractOfferings1']),
+        octeractObtainium1: new OcteractUpgrade(octeractData['octeractObtainium1']),
+        octeractAscensions: new OcteractUpgrade(octeractData['octeractAscensions']),
+        octeractAscensionsOcteractGain: new OcteractUpgrade(octeractData['octeractAscensionsOcteractGain']),
+        octeractFastForward: new OcteractUpgrade(octeractData['octeractFastForward'])
     }
 
     if (data.loadedOct4Hotfix === undefined || player.loadedOct4Hotfix === false) {
@@ -395,6 +462,9 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
             calculator: 0,
             calculator2: 0,
             calculator3: 0,
+            calculator4: 0,
+            calculator5: 0,
+            calculator6: 0,
             constantEX: 0,
             powderEX: 0,
             chronometer2: 0,
@@ -402,13 +472,24 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
             seasonPassY: 0,
             seasonPassZ: 0,
             challengeTome2: 0,
+            instantChallenge2: 0,
             cashGrab2: 0,
             cubeToQuarkAll: 0,
             obtainiumEX2: 0,
             offeringEX2: 0,
             powderAuto: 0,
             chronometerZ: 0,
-            seasonPassLost: 0
+            seasonPassLost: 0,
+            challenge15Auto: 0,
+            extraWarp: 0,
+            improveQuarkHept: 0,
+            improveQuarkHept2: 0,
+            improveQuarkHept3: 0,
+            improveQuarkHept4: 0,
+            shopImprovedDaily: 0,
+            shopImprovedDaily2: 0,
+            shopImprovedDaily3: 0,
+            shopImprovedDaily4: 0
         }
 
         player.worlds.add(150 * shop.offeringTimerLevel + 25/2 * (shop.offeringTimerLevel - 1) * shop.offeringTimerLevel, false);
@@ -462,8 +543,6 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
             if (data.hepteractCrafts[k]) {
                 player.hepteractCrafts[k] = createHepteract({...player.hepteractCrafts[k], ...data.hepteractCrafts[k]});
             }
-
-            G['autoHepteractCount'] += +player.hepteractCrafts[k].AUTO
         }
     }
 
@@ -485,6 +564,9 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
 
     if (data.overfluxOrbs === undefined) {
         player.overfluxOrbs = 0;
+    }
+    if (data.overfluxOrbsAutoBuy === undefined) {
+        player.overfluxOrbsAutoBuy = false;
     }
     if (data.overfluxPowder === undefined) {
         player.overfluxPowder = 0;
@@ -537,6 +619,15 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
         }
     }
 
+    if (data.totalQuarksEver === undefined){
+        player.totalQuarksEver = 0;
+    }
+
+    if (data.hotkeys === undefined) {
+        player.hotkeys = {};
+        player.theme = 'Dark Mode';
+    }
+
     // Update (read: check) for undefined shop upgrades. Also checks above max level.
     const shopKeys = Object.keys(blankSave['shopUpgrades']) as (keyof Player['shopUpgrades'])[];
     for (const shopUpgrade of shopKeys) {
@@ -565,13 +656,44 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
                     toggleBuy: data.singularityUpgrades[k].toggleBuy,
                     minimumSingularity: singularityData[k].minimumSingularity,
                     effect: singularityData[k].effect,
-                    freeLevels: data.singularityUpgrades[k].freeLevels
+                    freeLevels: data.singularityUpgrades[k].freeLevels,
+                    canExceedCap: singularityData[k].canExceedCap
                 }
                 player.singularityUpgrades[k] = new SingularityUpgrade(updatedData);
 
                 if (player.singularityUpgrades[k].minimumSingularity > player.singularityCount) {
                     player.singularityUpgrades[k].refund()
                 }
+
+                const cost = player.singularityUpgrades[k].level * (player.singularityUpgrades[k].level + 1) *
+                             player.singularityUpgrades[k].costPerLevel / 2
+                if (player.singularityUpgrades[k].maxLevel !== -1 &&
+                    player.singularityUpgrades[k].level <= player.singularityUpgrades[k].maxLevel &&
+                    player.singularityUpgrades[k].goldenQuarksInvested !== cost) {
+                    player.singularityUpgrades[k].refund()
+                }
+            }
+        }
+    }
+
+    if (data.octeractUpgrades != null) { // TODO: Make this more DRY -Platonic, July 15 2022
+        for (const item in blankSave.octeractUpgrades) {
+            const k = item as keyof Player['octeractUpgrades'];
+            let updatedData:IOcteractData
+            if (data.octeractUpgrades[k]) {
+                updatedData = {
+                    name: octeractData[k].name,
+                    description: octeractData[k].description,
+                    maxLevel: octeractData[k].maxLevel,
+                    costPerLevel: octeractData[k].costPerLevel,
+                    level: data.octeractUpgrades[k].level,
+                    octeractsInvested: data.octeractUpgrades[k].octeractsInvested,
+                    toggleBuy: data.octeractUpgrades[k].toggleBuy,
+                    effect: octeractData[k].effect,
+                    costFormula: octeractData[k].costFormula,
+                    freeLevels: data.octeractUpgrades[k].freeLevels
+                }
+                player.octeractUpgrades[k] = new OcteractUpgrade(updatedData);
             }
         }
     }
@@ -591,19 +713,6 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
 
     if (data.goldenQuarksTimer === undefined || player.goldenQuarksTimer === undefined) {
         player.goldenQuarksTimer = 90000;
-    }
-
-    if (player.singularityUpgrades.cookies3.goldenQuarksInvested === 5000 || player.singularityUpgrades.cookies4.goldenQuarksInvested === 50000) {
-        player.singularityUpgrades.cookies3.refund();
-        player.singularityUpgrades.cookies4.refund();
-    }
-
-    if (player.singularityUpgrades.cookies4.goldenQuarksInvested === 199999) {
-        player.singularityUpgrades.cookies4.refund();
-    }
-
-    if (player.singularityUpgrades.octeractUnlock.goldenQuarksInvested === 8888) {
-        player.singularityUpgrades.octeractUnlock.refund();
     }
 
     if (data.hepteractAutoCraftPercentage === undefined) {
@@ -631,5 +740,61 @@ export const checkVariablesOnLoad = (data: PlayerSave) => {
     if (data.shopBuyMaxToggle === undefined) {
         player.shopBuyMaxToggle = false;
         player.shopConfirmationToggle = true;
+    }
+
+    if (data.wowOcteracts === undefined) {
+        player.wowOcteracts = 0;
+        player.octeractTimer = 0;
+    }
+
+    if (data.shopHideToggle === undefined) {
+        player.shopHideToggle = false;
+    }
+
+    if (data.researchBuyMaxToggle === undefined) {
+        player.researchBuyMaxToggle = false;
+    }
+
+    if (data.cubeUpgradesBuyMaxToggle === undefined) {
+        player.cubeUpgradesBuyMaxToggle = false;
+    }
+
+    if (data.ascensionCounterRealReal === undefined) {
+        player.ascensionCounterRealReal = 0;
+    }
+
+    if (data.totalWowOcteracts === undefined) {
+        player.totalWowOcteracts = 0;
+    }
+
+    if (data.highestSingularityCount === undefined) {
+        player.highestSingularityCount = player.singularityCount
+        if (player.singularityCount > 0) {
+            player.goldenQuarks += 200;
+            player.goldenQuarks += 100 * Math.min(10, player.singularityCount)
+
+            if (player.singularityCount >= 5) {
+                player.singularityUpgrades.goldenQuarks3.freeLevels += 1;
+            }
+
+            if (player.singularityCount >= 10) {
+                player.singularityUpgrades.goldenQuarks3.freeLevels += 2;
+            }
+        }
+    }
+
+    const oldest = localStorage.getItem('firstPlayed')
+
+    if (data.firstPlayed == undefined) {
+        // If the save is from before v2.9.7 staticians
+        player.firstPlayed = oldest ?? new Date().toISOString()
+    } else if (data.firstPlayed?.includes('Before')) {
+        // The first version with player.firstPlayed set the date to
+        // "Before {date.toString}"
+        player.firstPlayed = oldest ?? new Date().toISOString()
+    } else {
+        // Otherwise just set the firstPlayed time to either the oldest
+        // stored, or the date in the save being loaded.
+        player.firstPlayed = oldest ?? data.firstPlayed
     }
 }
